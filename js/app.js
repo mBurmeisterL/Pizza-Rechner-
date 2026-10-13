@@ -15,6 +15,36 @@ const PRESENCE_MIN = 5;       // so lange musst du bei passiven Schritten "da se
 const MAX_PLAN_EVALS = 40000;  // Obergrenze für die Suche nach dem besten Zeitplan
 // Früher mitgelieferte Beispielrezepte, die aus bestehenden Daten einmalig entfernt werden
 const OLD_EXAMPLE_RECIPES = ['Neapolitanische Pizza (24 h kalte Gare)', 'Schnelle Pizza (am selben Tag)'];
+// Fest eingebaute Rezepte: werden einmalig zu den eigenen Rezepten hinzugefügt.
+// Wer eines löscht, bekommt es nicht wieder (gemerkt in data.seeded).
+const BUILTIN_RECIPES = [
+  {
+    id: 'builtin-48h-biga',
+    name: '48-Stunden-Pizzateig mit Biga',
+    description: '1 kg Mehl, 75 % Hydration. Biga als Vorteig, dann Hauptteig – insgesamt rund 48 Stunden Fermentation. Teiglinge 250–300 g.',
+    basePizzas: 6,
+    ingredients: [
+      { name: 'Mehl (Biga)', amount: 500, unit: 'g' },
+      { name: 'Wasser (Biga)', amount: 250, unit: 'g' },
+      { name: 'Trockenhefe (Biga)', amount: 0.3, unit: 'g' },
+      { name: 'Mehl (Hauptteig)', amount: 500, unit: 'g' },
+      { name: 'Wasser (Hauptteig)', amount: 500, unit: 'g' },
+      { name: 'Trockenhefe (Hauptteig)', amount: 0.7, unit: 'g' },
+      { name: 'Salz (Hauptteig)', amount: 30, unit: 'g' }
+    ],
+    steps: [
+      { name: 'Biga mischen', minutes: 10, active: true, maxMinutes: 10, note: 'Mehl, Wasser und Trockenhefe kurz vermischen – nicht komplett glatt kneten.' },
+      { name: 'Biga bei Raumtemperatur', minutes: 110, active: false, maxMinutes: 110, note: 'Abgedeckt stehen lassen.' },
+      { name: 'Biga in den Kühlschrank', minutes: 1200, active: false, maxMinutes: 1440, note: 'Abdecken und kalt stellen (ca. 20 Stunden).' },
+      { name: 'Hauptteig kneten', minutes: 15, active: true, maxMinutes: 15, note: 'Zur Biga: Mehl, Wasser, Trockenhefe und Salz. Gründlich verkneten, bis der Teig elastisch ist.' },
+      { name: 'Teig ruhen lassen', minutes: 15, active: false, maxMinutes: 15, note: 'Bei Raumtemperatur.' },
+      { name: 'Teiglinge formen', minutes: 15, active: true, maxMinutes: 15, note: 'Kugeln mit 250–300 g formen.' },
+      { name: 'Teiglinge in den Kühlschrank', minutes: 1200, active: false, maxMinutes: 1440, note: 'Abgedeckt ca. 20 Stunden kalt fermentieren lassen.' },
+      { name: 'Teiglinge akklimatisieren', minutes: 120, active: false, maxMinutes: 180, note: 'Aus dem Kühlschrank nehmen und bei Raumtemperatur stehen lassen. Ofen rechtzeitig vorheizen.' },
+      { name: 'Pizza machen', minutes: 30, active: true, maxMinutes: 30, note: 'Formen, belegen, backen. 🍕' }
+    ]
+  }
+];
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -27,6 +57,7 @@ function uid() {
 function defaultData() {
   return {
     examplesRemoved: true,
+    seeded: [],
     recipes: [],
     busy: [
       { id: uid(), label: 'Schlafen', days: [0, 1, 2, 3, 4, 5, 6], from: '23:00', to: '07:00' }
@@ -48,7 +79,7 @@ function load() {
   } catch (e) {
     console.warn('Konnte gespeicherte Daten nicht lesen', e);
   }
-  return defaultData();
+  return normalizeData(defaultData());
 }
 
 // Prüft und repariert geladene Daten (z. B. aus einer alten oder fremden Sicherung)
@@ -78,11 +109,19 @@ function normalizeData(d) {
       };
     })
   }));
+  // Eingebaute Rezepte einmalig hinzufügen
+  const seeded = Array.isArray(d.seeded) ? d.seeded.map(String) : [];
+  for (const b of BUILTIN_RECIPES) {
+    if (seeded.includes(b.id)) continue;
+    if (!recipes.some(r => r.id === b.id)) recipes.push(JSON.parse(JSON.stringify(b)));
+    seeded.push(b.id);
+  }
   const busy = (Array.isArray(d.busy) ? d.busy : base.busy)
     .filter(b => b && Array.isArray(b.days) && /^\d{1,2}:\d{2}$/.test(b.from) && /^\d{1,2}:\d{2}$/.test(b.to))
     .map(b => ({ id: String(b.id || uid()), label: String(b.label || 'Belegt'), days: b.days.map(Number).filter(x => x >= 0 && x <= 6), from: b.from, to: b.to }));
   return {
     examplesRemoved: true,
+    seeded,
     recipes,
     busy,
     settings: Object.assign({}, base.settings, d.settings && typeof d.settings === 'object' ? d.settings : {}),
@@ -1105,7 +1144,7 @@ function renderSettings() {
       </div>
       <details>
         <summary>Alles zurücksetzen</summary>
-        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten.</p>
+        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten. Das eingebaute 48-Stunden-Rezept kommt danach wieder.</p>
         <button class="btn small danger" id="reset">Zurücksetzen</button>
       </details>
     </section>
@@ -1187,7 +1226,7 @@ function renderSettings() {
 
   $('#reset').addEventListener('click', () => {
     if (!confirm('Wirklich alle Daten löschen?')) return;
-    data = defaultData();
+    data = normalizeData(defaultData());
     save();
     toast('Zurückgesetzt');
     location.hash = '#/';
