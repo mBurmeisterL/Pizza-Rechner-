@@ -13,6 +13,38 @@ const SHORTCUT_NAME = 'Pizza Erinnerungen';
 const FLEX_STEP_MIN = 15;     // Raster, in dem flexible Ruhezeiten verlängert werden
 const PRESENCE_MIN = 5;       // so lange musst du bei passiven Schritten "da sein" (z. B. Teig in den Kühlschrank)
 const MAX_PLAN_EVALS = 40000;  // Obergrenze für die Suche nach dem besten Zeitplan
+// Früher mitgelieferte Beispielrezepte, die aus bestehenden Daten einmalig entfernt werden
+const OLD_EXAMPLE_RECIPES = ['Neapolitanische Pizza (24 h kalte Gare)', 'Schnelle Pizza (am selben Tag)'];
+// Fest eingebaute Rezepte: werden einmalig zu den eigenen Rezepten hinzugefügt.
+// Wer eines löscht, bekommt es nicht wieder (gemerkt in data.seeded).
+const BUILTIN_RECIPES = [
+  {
+    id: 'builtin-48h-biga',
+    name: '48-Stunden-Pizzateig mit Biga',
+    description: '1 kg Mehl, 75 % Hydration. Biga als Vorteig, dann Hauptteig – insgesamt rund 48 Stunden Fermentation. Teiglinge 250–300 g.',
+    basePizzas: 6,
+    ingredients: [
+      { name: 'Mehl (Biga)', amount: 500, unit: 'g' },
+      { name: 'Wasser (Biga)', amount: 250, unit: 'g' },
+      { name: 'Trockenhefe (Biga)', amount: 0.3, unit: 'g' },
+      { name: 'Mehl (Hauptteig)', amount: 500, unit: 'g' },
+      { name: 'Wasser (Hauptteig)', amount: 500, unit: 'g' },
+      { name: 'Trockenhefe (Hauptteig)', amount: 0.7, unit: 'g' },
+      { name: 'Salz (Hauptteig)', amount: 30, unit: 'g' }
+    ],
+    steps: [
+      { name: 'Biga mischen', minutes: 10, active: true, maxMinutes: 10, note: 'Mehl, Wasser und Trockenhefe kurz vermischen – nicht komplett glatt kneten.' },
+      { name: 'Biga bei Raumtemperatur', minutes: 110, active: false, maxMinutes: 110, note: 'Abgedeckt stehen lassen.' },
+      { name: 'Biga in den Kühlschrank', minutes: 1200, active: false, maxMinutes: 1440, note: 'Abdecken und kalt stellen (ca. 20 Stunden).' },
+      { name: 'Hauptteig kneten', minutes: 15, active: true, maxMinutes: 15, note: 'Zur Biga: Mehl, Wasser, Trockenhefe und Salz. Gründlich verkneten, bis der Teig elastisch ist.' },
+      { name: 'Teig ruhen lassen', minutes: 15, active: false, maxMinutes: 15, note: 'Bei Raumtemperatur.' },
+      { name: 'Teiglinge formen', minutes: 15, active: true, maxMinutes: 15, note: 'Kugeln mit 250–300 g formen.' },
+      { name: 'Teiglinge in den Kühlschrank', minutes: 1200, active: false, maxMinutes: 1440, note: 'Abgedeckt ca. 20 Stunden kalt fermentieren lassen.' },
+      { name: 'Teiglinge akklimatisieren', minutes: 120, active: false, maxMinutes: 180, note: 'Aus dem Kühlschrank nehmen und bei Raumtemperatur stehen lassen. Ofen rechtzeitig vorheizen.' },
+      { name: 'Pizza machen', minutes: 30, active: true, maxMinutes: 30, note: 'Formen, belegen, backen. 🍕' }
+    ]
+  }
+];
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -24,49 +56,9 @@ function uid() {
 
 function defaultData() {
   return {
-    recipes: [
-      {
-        id: uid(),
-        name: 'Neapolitanische Pizza (24 h kalte Gare)',
-        description: 'Klassischer Teig mit wenig Hefe und langer Reifung im Kühlschrank. 65 % Hydration.',
-        basePizzas: 4,
-        ingredients: [
-          { name: 'Mehl Tipo 00', amount: 600, unit: 'g' },
-          { name: 'Wasser', amount: 390, unit: 'g' },
-          { name: 'Salz', amount: 18, unit: 'g' },
-          { name: 'Frischhefe', amount: 1, unit: 'g' }
-        ],
-        steps: [
-          { name: 'Teig kneten', minutes: 20, active: true, maxMinutes: 20, note: 'Hefe im Wasser auflösen, Mehl zugeben, Salz zum Schluss.' },
-          { name: 'Stockgare bei Raumtemperatur', minutes: 120, active: false, maxMinutes: 180, note: 'Abgedeckt ruhen lassen.' },
-          { name: 'Kalte Gare im Kühlschrank', minutes: 1440, active: false, maxMinutes: 2880, note: 'Teig luftdicht abdecken.' },
-          { name: 'Teiglinge formen', minutes: 15, active: true, maxMinutes: 15, note: 'Teig aus dem Kühlschrank, in gleich große Kugeln teilen.' },
-          { name: 'Stückgare', minutes: 180, active: false, maxMinutes: 300, note: 'Teiglinge abgedeckt bei Raumtemperatur gehen lassen.' },
-          { name: 'Ofen vorheizen', minutes: 60, active: false, maxMinutes: 60, note: 'Ofen auf maximale Temperatur, Pizzastein mit aufheizen.' },
-          { name: 'Pizzen formen, belegen & backen', minutes: 30, active: true, maxMinutes: 30, note: '' }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Schnelle Pizza (am selben Tag)',
-        description: 'Für spontane Pizzaabende – fertig in gut 2,5 Stunden.',
-        basePizzas: 2,
-        ingredients: [
-          { name: 'Mehl Type 550', amount: 300, unit: 'g' },
-          { name: 'Wasser (lauwarm)', amount: 195, unit: 'g' },
-          { name: 'Salz', amount: 7, unit: 'g' },
-          { name: 'Trockenhefe', amount: 3, unit: 'g' },
-          { name: 'Olivenöl', amount: 10, unit: 'g' }
-        ],
-        steps: [
-          { name: 'Teig kneten', minutes: 10, active: true, maxMinutes: 10, note: '' },
-          { name: 'Teig gehen lassen', minutes: 90, active: false, maxMinutes: 180, note: 'Warm und abgedeckt.' },
-          { name: 'Teiglinge formen', minutes: 10, active: true, maxMinutes: 10, note: '' },
-          { name: 'Stückgare & Ofen vorheizen', minutes: 45, active: false, maxMinutes: 60, note: 'Ofen gleich mit vorheizen.' },
-          { name: 'Pizzen belegen & backen', minutes: 20, active: true, maxMinutes: 20, note: '' }
-        ]
-      }
-    ],
+    examplesRemoved: true,
+    seeded: [],
+    recipes: [],
     busy: [
       { id: uid(), label: 'Schlafen', days: [0, 1, 2, 3, 4, 5, 6], from: '23:00', to: '07:00' }
     ],
@@ -75,7 +67,7 @@ function defaultData() {
   };
 }
 
-let data = load();
+let data; // wird beim Start geladen (siehe ganz unten)
 
 function load() {
   try {
@@ -87,15 +79,52 @@ function load() {
   } catch (e) {
     console.warn('Konnte gespeicherte Daten nicht lesen', e);
   }
-  return defaultData();
+  return normalizeData(defaultData());
 }
 
+// Prüft und repariert geladene Daten (z. B. aus einer alten oder fremden Sicherung)
 function normalizeData(d) {
   const base = defaultData();
+  const num = (v, fallback = 0) => (isFinite(Number(v)) && v !== '' && v !== null ? Number(v) : fallback);
+  let recipes = Array.isArray(d.recipes) ? d.recipes : base.recipes;
+  if (!d.examplesRemoved) recipes = recipes.filter(r => !OLD_EXAMPLE_RECIPES.includes(r && r.name));
+  recipes = recipes.filter(r => r && typeof r === 'object').map(r => ({
+    id: String(r.id || uid()),
+    name: String(r.name || 'Rezept'),
+    description: String(r.description || ''),
+    basePizzas: Math.max(1, Math.round(num(r.basePizzas, 1))),
+    ingredients: (Array.isArray(r.ingredients) ? r.ingredients : []).filter(Boolean).map(i => ({
+      name: String(i.name || ''),
+      amount: Math.max(0, num(i.amount)),
+      unit: String(i.unit || 'g')
+    })),
+    steps: (Array.isArray(r.steps) ? r.steps : []).filter(Boolean).map(st => {
+      const minutes = Math.max(0, Math.round(num(st.minutes)));
+      return {
+        name: String(st.name || 'Schritt'),
+        minutes,
+        active: !!st.active,
+        maxMinutes: st.active ? minutes : Math.max(minutes, Math.round(num(st.maxMinutes))),
+        note: String(st.note || '')
+      };
+    })
+  }));
+  // Eingebaute Rezepte einmalig hinzufügen
+  const seeded = Array.isArray(d.seeded) ? d.seeded.map(String) : [];
+  for (const b of BUILTIN_RECIPES) {
+    if (seeded.includes(b.id)) continue;
+    if (!recipes.some(r => r.id === b.id)) recipes.push(JSON.parse(JSON.stringify(b)));
+    seeded.push(b.id);
+  }
+  const busy = (Array.isArray(d.busy) ? d.busy : base.busy)
+    .filter(b => b && Array.isArray(b.days) && /^\d{1,2}:\d{2}$/.test(b.from) && /^\d{1,2}:\d{2}$/.test(b.to))
+    .map(b => ({ id: String(b.id || uid()), label: String(b.label || 'Belegt'), days: b.days.map(Number).filter(x => x >= 0 && x <= 6), from: b.from, to: b.to }));
   return {
-    recipes: Array.isArray(d.recipes) ? d.recipes : base.recipes,
-    busy: Array.isArray(d.busy) ? d.busy : base.busy,
-    settings: Object.assign({}, base.settings, d.settings || {}),
+    examplesRemoved: true,
+    seeded,
+    recipes,
+    busy,
+    settings: Object.assign({}, base.settings, d.settings && typeof d.settings === 'object' ? d.settings : {}),
     view: d.view && typeof d.view === 'object' ? d.view : {}
   };
 }
@@ -147,7 +176,7 @@ function fmtDuration(min) {
   const h = Math.floor((min % 1440) / 60);
   const m = min % 60;
   const parts = [];
-  if (d) parts.push(d + ' T');
+  if (d) parts.push(d === 1 ? '1 Tag' : d + ' Tage');
   if (h) parts.push(h + ' h');
   if (m || !parts.length) parts.push(m + ' min');
   return parts.join(' ');
@@ -183,6 +212,17 @@ function toLocalInputValue(date) {
 function parseHM(str) {
   const [h, m] = String(str || '0:0').split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
+}
+
+function pizzaWord(n) {
+  return `${n} ${Number(n) === 1 ? 'Pizza' : 'Pizzen'}`;
+}
+
+// Zeitspanne bis zu einem Zeitpunkt, z. B. "in 2 h 15 min"
+function fmtUntil(date) {
+  const min = Math.round((date - new Date()) / 60000);
+  if (min <= 0) return 'jetzt';
+  return 'in ' + fmtDuration(min);
 }
 
 function totalMinutes(recipe) {
@@ -299,6 +339,20 @@ function planSchedule(recipe, eatAt) {
   return result;
 }
 
+// Frühestmögliche Essenszeit (auf 15 min gerundet), bei der der erste Schritt nicht in der Vergangenheit liegt
+function earliestEatTime(recipe) {
+  const d = addMin(new Date(), totalMinutes(recipe) + 5);
+  d.setSeconds(0, 0);
+  d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15);
+  // Verlängerte Ruhezeiten können den Start nach vorne schieben – dann weiter nach hinten rücken
+  for (let i = 0; i < 96; i++) {
+    const plan = planSchedule(recipe, d);
+    if (!plan.length || plan[0].start >= new Date()) break;
+    d.setMinutes(d.getMinutes() + 15);
+  }
+  return d;
+}
+
 function defaultEatTime(recipe) {
   const minReady = addMin(new Date(), totalMinutes(recipe) + 30);
   const d = startOfDay(minReady);
@@ -323,13 +377,22 @@ function icsUtc(d) {
 }
 
 function icsFold(line) {
-  // Zeilen > 75 Zeichen umbrechen (RFC 5545)
+  // Zeilen nach max. 75 Bytes umbrechen (RFC 5545), ohne Zeichen wie 🍕 oder ä zu zerschneiden
+  const enc = new TextEncoder();
   const out = [];
-  while (line.length > 74) {
-    out.push(line.slice(0, 74));
-    line = ' ' + line.slice(74);
+  let cur = '';
+  let bytes = 0;
+  for (const ch of line) {
+    const b = enc.encode(ch).length;
+    if (bytes + b > 75) {
+      out.push(cur);
+      cur = ' ';
+      bytes = 1;
+    }
+    cur += ch;
+    bytes += b;
   }
-  out.push(line);
+  out.push(cur);
   return out.join('\r\n');
 }
 
@@ -347,7 +410,7 @@ function buildIcs(recipe, plan, count, alarmMinutes) {
     // damit der Kalender nicht mit tagelangen Blöcken zugestellt wird.
     const end = st.active ? st.end : addMin(st.start, Math.min(st.duration, 15) || 5);
     const desc = [
-      `${recipe.name} – ${count} Pizza${count === 1 ? '' : 's'}`,
+      `${recipe.name} – ${pizzaWord(count)}`,
       `Schritt ${idx + 1}/${plan.length}, Dauer: ${fmtDuration(st.duration)}`,
       `Nächster Schritt um ${fmtTime(st.end)} (${fmtDay(st.end)})`,
       st.note
@@ -415,6 +478,7 @@ function route() {
   const hash = location.hash.replace(/^#\/?/, '');
   const [page, id] = hash.split('/');
   window.scrollTo(0, 0);
+  clearInterval(liveTimer);
   if (page === 'rezept' && getRecipe(id)) return renderRecipe(getRecipe(id));
   if (page === 'neu') return renderEditor(null);
   if (page === 'bearbeiten' && getRecipe(id)) return renderEditor(getRecipe(id));
@@ -426,46 +490,84 @@ window.addEventListener('hashchange', route);
 
 /* ---------------------------------------------------------------- Startseite */
 
+const PIZZA_SVG = `
+  <svg class="hero-pizza" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="48" fill="#f2c27b"/>
+    <circle cx="50" cy="50" r="40" fill="#e0482f"/>
+    <g fill="#fff4dc">
+      <circle cx="36" cy="34" r="8"/><circle cx="62" cy="30" r="7"/><circle cx="66" cy="58" r="9"/>
+      <circle cx="40" cy="64" r="8"/><circle cx="52" cy="47" r="6"/>
+    </g>
+    <g fill="#2f7d4f">
+      <ellipse cx="48" cy="30" rx="5" ry="3" transform="rotate(-30 48 30)"/>
+      <ellipse cx="30" cy="50" rx="5" ry="3" transform="rotate(40 30 50)"/>
+      <ellipse cx="56" cy="70" rx="5" ry="3" transform="rotate(-10 56 70)"/>
+      <ellipse cx="72" cy="42" rx="5" ry="3" transform="rotate(60 72 42)"/>
+    </g>
+  </svg>`;
+
 function renderHome() {
   document.title = 'Pizza-Rechner';
+  const now = new Date();
   const cards = data.recipes.map(r => {
     const ball = baseBallWeight(r);
+    const v = data.view[r.id];
+    const planned = v && v.eatAt && new Date(v.eatAt) > now ? new Date(v.eatAt) : null;
     return `
       <a class="recipe-card" href="#/rezept/${esc(r.id)}">
-        <h2>${esc(r.name)}</h2>
-        ${r.description ? `<p class="muted small">${esc(r.description)}</p>` : ''}
-        <div class="chips">
-          <span class="chip">⏱ ${fmtDuration(totalMinutes(r))}</span>
-          <span class="chip">🍕 Basis: ${esc(r.basePizzas)} Pizza${r.basePizzas == 1 ? '' : 's'}</span>
-          ${ball ? `<span class="chip">⚖️ ${fmtAmount(ball)} g / Teigling</span>` : ''}
-          <span class="chip">📋 ${r.steps.length} Schritte</span>
+        <div class="recipe-avatar" aria-hidden="true">🍕</div>
+        <div class="body">
+          <h3>${esc(r.name)}</h3>
+          ${r.description ? `<p class="muted small">${esc(r.description)}</p>` : ''}
+          <div class="chips">
+            ${planned ? `<span class="chip accent">🗓 ${esc(fmtDay(planned))}, ${fmtTime(planned)}</span>` : ''}
+            <span class="chip">⏱ ${fmtDuration(totalMinutes(r))}</span>
+            <span class="chip">${pizzaWord(r.basePizzas)}</span>
+            ${ball ? `<span class="chip">⚖️ ${fmtAmount(ball)} g</span>` : ''}
+          </div>
         </div>
+        <span class="chev" aria-hidden="true">›</span>
       </a>`;
   }).join('');
 
   app.innerHTML = `
-    <div class="row between">
-      <h1>Meine Rezepte</h1>
-      <a class="btn primary" href="#/neu">＋ Neues Rezept</a>
-    </div>
-    ${data.recipes.length ? `<div class="recipe-list">${cards}</div>` : `
+    <section class="hero">
+      ${PIZZA_SVG}
+      <h1>Pizzateig, perfekt geplant.</h1>
+      <p>Rezept wählen, Anzahl Pizzen eingeben – der Rest wird ausgerechnet. Inklusive Zeitplan mit Erinnerungen.</p>
+      <a class="btn" href="#/neu">＋ Neues Rezept</a>
+    </section>
+
+    ${data.recipes.length ? `
+      <div class="section-title">
+        <h2>Meine Rezepte</h2>
+        <span class="muted small">${data.recipes.length} ${data.recipes.length === 1 ? 'Rezept' : 'Rezepte'}</span>
+      </div>
+      <div class="recipe-list">${cards}</div>` : `
       <div class="card empty">
-        <div class="big">🍕</div>
-        <p>Noch keine Rezepte. Leg dein erstes Teigrezept an!</p>
-        <a class="btn primary" href="#/neu">＋ Neues Rezept</a>
+        <div class="big">👩‍🍳</div>
+        <h2>Noch keine Rezepte</h2>
+        <p class="muted">Leg dein erstes Teigrezept an: Zutaten, Arbeitsschritte und Ruhezeiten.</p>
+        <a class="btn primary" href="#/neu">＋ Erstes Rezept anlegen</a>
       </div>`}
-    <p class="muted small">Tipp: In Safari über <b>Teilen → Zum Home-Bildschirm</b> wird der Pizza-Rechner zur App auf deinem iPhone.</p>
+
+    <div class="tip"><span aria-hidden="true">📱</span>
+      <div>In Safari über <b>Teilen → Zum Home-Bildschirm</b> wird der Pizza-Rechner zur App auf deinem iPhone.
+      Deine <a href="#/einstellungen">Schul- und Arbeitszeiten</a> trägst du in den Einstellungen ein.</div>
+    </div>
   `;
 }
 
 /* ---------------------------------------------------------------- Rezept */
 
+let liveTimer = null; // aktualisiert den Zeitplan jede Minute ("läuft gerade", "in 2 h")
+
 function renderRecipe(recipe) {
   document.title = recipe.name + ' – Pizza-Rechner';
   const v = data.view[recipe.id] || {};
   const state = {
-    count: v.count || Number(recipe.basePizzas) || 1,
-    ballWeight: v.ballWeight || null,
+    count: Math.max(1, Math.round(Number(v.count) || Number(recipe.basePizzas) || 1)),
+    ballWeight: Number(v.ballWeight) > 0 ? Number(v.ballWeight) : null,
     eatAt: v.eatAt && new Date(v.eatAt) > new Date() ? new Date(v.eatAt) : defaultEatTime(recipe)
   };
   const baseBall = baseBallWeight(recipe);
@@ -473,63 +575,72 @@ function renderRecipe(recipe) {
   app.innerHTML = `
     <a class="back" href="#/">‹ Alle Rezepte</a>
     <h1>${esc(recipe.name)}</h1>
-    ${recipe.description ? `<p class="muted">${esc(recipe.description)}</p>` : ''}
-    <div class="btn-row" style="margin:0 0 16px">
+    ${recipe.description ? `<p class="lead">${esc(recipe.description)}</p>` : ''}
+    <div class="actions">
       <a class="btn small" href="#/bearbeiten/${esc(recipe.id)}">✏️ Bearbeiten</a>
       <button class="btn small" id="dup">📄 Duplizieren</button>
       <button class="btn small danger" id="del">🗑 Löschen</button>
     </div>
 
+    <div class="stats" id="stats"></div>
+    <div id="nextStep"></div>
+
     <section class="card">
-      <h2>Wie viele Pizzen?</h2>
+      <div class="card-head"><span class="card-icon" aria-hidden="true">🍕</span><h2>Wie viele Pizzen?</h2></div>
       <div class="stepper">
-        <button class="btn icon" id="minus" aria-label="Weniger">−</button>
+        <button class="btn icon" id="minus" aria-label="Eine Pizza weniger">−</button>
         <input type="number" id="count" min="1" max="200" inputmode="numeric" value="${state.count}" aria-label="Anzahl Pizzen">
-        <button class="btn icon" id="plus" aria-label="Mehr">＋</button>
+        <button class="btn icon" id="plus" aria-label="Eine Pizza mehr">＋</button>
       </div>
+      <div class="stepper-label" id="countLabel"></div>
       ${baseBall ? `
-        <div class="field" style="margin-top:14px">
-          <label for="ball">Gewicht pro Teigling (g)</label>
-          <div class="row">
-            <input type="number" id="ball" class="grow" min="50" max="1000" step="5" inputmode="numeric"
-              value="${Math.round(state.ballWeight || baseBall)}" style="max-width:140px">
-            <button class="btn small" id="ballReset" title="Auf Rezept-Wert zurücksetzen">↺ ${fmtAmount(baseBall)} g</button>
+        <div class="ball-row">
+          <div>
+            <label for="ball">Gewicht pro Teigling</label>
+            <div class="muted small">Neapolitanisch ca. 250–280 g, Blechpizza 350–450 g</div>
           </div>
-          <p class="muted small" style="margin-top:4px">Neapolitanisch ca. 250–280 g, große Blechpizza eher 350–450 g.</p>
+          <div class="ball-input">
+            <input type="number" id="ball" min="50" max="2000" step="5" inputmode="numeric" value="${Math.round(state.ballWeight || baseBall)}">
+            <span class="muted">g</span>
+            <button class="btn small ghost" id="ballReset" title="Auf den Wert aus dem Rezept zurücksetzen" aria-label="Zurücksetzen">↺</button>
+          </div>
         </div>` : ''}
       <h3>Zutaten</h3>
       <table><tbody id="ingBody"></tbody><tfoot id="ingFoot"></tfoot></table>
     </section>
 
     <section class="card">
-      <h2>Zeitplan</h2>
-      <div class="field">
-        <label for="eatAt">Wann wollt ihr essen?</label>
-        <input type="datetime-local" id="eatAt" value="${toLocalInputValue(state.eatAt)}">
-      </div>
-      <div id="planNotice"></div>
-      <ol class="timeline" id="timeline"></ol>
+      <div class="card-head"><span class="card-icon" aria-hidden="true">🗓</span><h2>Zeitplan</h2></div>
+      ${recipe.steps.length ? `
+        <div class="field" style="margin-bottom:0">
+          <label for="eatAt">Wann wollt ihr essen?</label>
+          <input type="datetime-local" id="eatAt" value="${toLocalInputValue(state.eatAt)}">
+        </div>
+        <div id="planNotice"></div>
+        <ol class="timeline" id="timeline"></ol>
 
-      <h3>Erinnerungen</h3>
-      <div class="field">
-        <label for="alarm">Erinnern …</label>
-        <select id="alarm">
-          ${[0, 5, 10, 15, 30, 60].map(m => `<option value="${m}" ${data.settings.alarmMinutes == m ? 'selected' : ''}>${m === 0 ? 'zum Zeitpunkt des Schritts' : m + ' Minuten vorher'}</option>`).join('')}
-        </select>
-      </div>
-      <div class="btn-row">
-        <button class="btn primary" id="ics">📅 In Apple Kalender übernehmen</button>
-        <button class="btn" id="reminders">⏰ In Apple Erinnerungen</button>
-      </div>
-      <p class="muted small" style="margin-top:8px">
-        <b>Kalender:</b> lädt eine .ics-Datei – auf dem iPhone „Alle hinzufügen“ tippen, jeder Schritt bekommt einen Alarm.<br>
-        <b>Erinnerungen:</b> braucht einmalig den Kurzbefehl „${SHORTCUT_NAME}“ – <a href="#/einstellungen">Anleitung</a>.
-      </p>
+        <div class="export">
+          <h3>Erinnerungen aufs iPhone</h3>
+          <label for="alarm" class="small">Erinnern</label>
+          <select id="alarm">
+            ${[0, 5, 10, 15, 30, 60].map(m => `<option value="${m}" ${Number(data.settings.alarmMinutes) === m ? 'selected' : ''}>${m === 0 ? 'zum Zeitpunkt des Schritts' : m + ' Minuten vorher'}</option>`).join('')}
+          </select>
+          <div class="btn-row">
+            <button class="btn primary" id="ics">📅 In Apple Kalender</button>
+            <button class="btn" id="reminders">⏰ In Apple Erinnerungen</button>
+          </div>
+          <p class="muted small" style="margin:10px 0 0">
+            <b>Kalender</b> klappt sofort: Datei öffnen, „Alle hinzufügen“ tippen – jeder Schritt bekommt einen Alarm.
+            <b>Erinnerungen</b> brauchen einmalig einen Kurzbefehl – <a href="#/einstellungen">zur Anleitung</a>.
+          </p>
+        </div>` : `
+        <p class="muted">Dieses Rezept hat noch keine Arbeitsschritte. <a href="#/bearbeiten/${esc(recipe.id)}">Jetzt Schritte hinzufügen</a>, dann erscheint hier dein Zeitplan.</p>`}
     </section>
   `;
 
   const countEl = $('#count');
   const ballEl = $('#ball');
+  let currentPlan = [];
 
   function persist() {
     data.view[recipe.id] = {
@@ -540,78 +651,122 @@ function renderRecipe(recipe) {
     save();
   }
 
+  function renderStats() {
+    const total = baseDoughWeight(recipe) * scaleFactor(recipe, state.count, state.ballWeight);
+    const stats = [
+      [total ? fmtAmount(total) + ' g' : '–', 'Teig gesamt'],
+      [total ? fmtAmount(total / state.count) + ' g' : '–', 'pro Pizza'],
+      [fmtDuration(currentPlan.length ? (state.eatAt - currentPlan[0].start) / 60000 : totalMinutes(recipe)), 'Gesamtzeit']
+    ];
+    $('#stats').innerHTML = stats.map(([val, label]) => `<div class="stat"><div class="v">${val}</div><div class="l">${label}</div></div>`).join('');
+    $('#countLabel').textContent = state.count === 1 ? 'Pizza' : 'Pizzen';
+  }
+
   function renderIngredients() {
     const f = scaleFactor(recipe, state.count, state.ballWeight);
     $('#ingBody').innerHTML = recipe.ingredients.map(i => `
-      <tr><td>${esc(i.name)}</td><td class="num">${fmtAmount((Number(i.amount) || 0) * f)} ${esc(i.unit)}</td></tr>
-    `).join('') || '<tr><td class="muted">Keine Zutaten eingetragen.</td></tr>';
+      <tr><td>${esc(i.name)}</td><td class="num">${fmtAmount((Number(i.amount) || 0) * f)}<span class="unit-s">${esc(i.unit)}</span></td></tr>
+    `).join('') || `<tr><td class="muted">Keine Zutaten eingetragen.</td></tr>`;
     const total = baseDoughWeight(recipe) * f;
-    $('#ingFoot').innerHTML = total ? `
-      <tr><td>Teig gesamt</td><td class="num">${fmtAmount(total)} g</td></tr>
-      <tr><td>pro Pizza</td><td class="num">${fmtAmount(total / state.count)} g</td></tr>` : '';
+    $('#ingFoot').innerHTML = total ? `<tr><td>Teig gesamt</td><td class="num">${fmtAmount(total)}<span class="unit-s">g</span></td></tr>` : '';
+    renderStats();
   }
 
-  let currentPlan = [];
+  function renderNextStep() {
+    const now = new Date();
+    const box = $('#nextStep');
+    const running = currentPlan.find(st => st.start <= now && now < st.end);
+    const next = currentPlan.find(st => st.start > now);
+    if (!currentPlan.length || (!running && !next && state.eatAt <= now)) {
+      box.innerHTML = '';
+      return;
+    }
+    const target = next || { name: 'Guten Appetit!', start: state.eatAt };
+    box.innerHTML = `
+      <div class="next-step">
+        <span class="ico" aria-hidden="true">${running ? '⏳' : '👉'}</span>
+        <div>
+          ${running ? `<div class="s">Läuft gerade: <b>${esc(running.name)}</b></div>` : ''}
+          <div class="t">Als Nächstes: ${esc(target.name)}</div>
+          <div class="s">${esc(fmtDay(target.start))}, ${fmtTime(target.start)} Uhr · ${fmtUntil(target.start)}</div>
+        </div>
+      </div>`;
+  }
 
   function renderPlan() {
+    if (!recipe.steps.length) {
+      renderNextStep();
+      return;
+    }
     const plan = planSchedule(recipe, state.eatAt);
     currentPlan = plan;
     const now = new Date();
     const notices = [];
 
     if (plan.length && plan[0].start < now) {
-      const earliest = addMin(now, totalMinutes(recipe));
-      notices.push(`<div class="notice warn">⚠️ Der erste Schritt läge in der Vergangenheit (${fmtDay(plan[0].start)}, ${fmtTime(plan[0].start)}).
-        Frühestens möglich: <b>${fmtDay(earliest)}, ${fmtTime(earliest)}</b>.
-        <button class="btn small" id="setEarliest" style="margin-top:6px">Frühesten Termin übernehmen</button></div>`);
+      notices.push(`<div class="notice warn"><span aria-hidden="true">⚠️</span><div>Dafür hättest du schon <b>${esc(fmtDay(plan[0].start))}, ${fmtTime(plan[0].start)} Uhr</b> anfangen müssen.
+        <br><button class="btn small" id="setEarliest">Frühestmöglichen Termin wählen</button></div></div>`);
     }
     const conflicted = plan.filter(p => p.conflicts.length);
     if (conflicted.length) {
-      notices.push(`<div class="notice warn">⚠️ ${conflicted.length === 1 ? 'Ein Schritt fällt' : conflicted.length + ' Schritte fallen'} in deine belegten Zeiten.
-        Verschiebe die Essenszeit, gib Ruhezeiten mehr Spielraum oder passe deine <a href="#/einstellungen">Zeiten</a> an.</div>`);
-    } else if (plan.length && data.busy.length) {
-      notices.push(`<div class="notice ok">✅ Alle Schritte passen zu deinen Schul-/Arbeitszeiten.</div>`);
+      notices.push(`<div class="notice warn"><span aria-hidden="true">⚠️</span><div>${conflicted.length === 1 ? 'Ein Schritt fällt' : conflicted.length + ' Schritte fallen'} in deine belegten Zeiten.
+        Verschieb die Essenszeit, gib Ruhezeiten mehr Spielraum oder pass deine <a href="#/einstellungen">Zeiten</a> an.</div></div>`);
+    } else if (data.busy.length && plan[0].start >= now) {
+      notices.push(`<div class="notice ok"><span aria-hidden="true">✅</span><div>Alles passt zu deinen Schul-, Arbeits- und Schlafenszeiten.</div></div>`);
     }
     $('#planNotice').innerHTML = notices.join('');
     const se = $('#setEarliest');
     if (se) se.addEventListener('click', () => {
-      const d = addMin(new Date(), totalMinutes(recipe) + 5);
-      d.setSeconds(0, 0);
-      d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15);
-      state.eatAt = d;
-      $('#eatAt').value = toLocalInputValue(d);
+      state.eatAt = earliestEatTime(recipe);
+      $('#eatAt').value = toLocalInputValue(state.eatAt);
       persist();
       renderPlan();
     });
 
-    const items = plan.map((st, idx) => {
+    const items = [];
+    let lastDay = '';
+    const dayHeader = date => {
+      const day = fmtDay(date);
+      if (day !== lastDay) {
+        lastDay = day;
+        items.push(`<li class="tl-day">${esc(day)}</li>`);
+      }
+    };
+    plan.forEach((st, idx) => {
+      dayHeader(st.start);
       const isNow = st.start <= now && now < st.end;
       const isDone = st.end <= now;
-      const badges = [];
-      badges.push(st.active ? '<span class="badge info">👐 Arbeit</span>' : '<span class="badge info">💤 Ruhezeit</span>');
-      if (st.extendedBy > 0) badges.push(`<span class="badge ok">↔ +${fmtDuration(st.extendedBy)} verlängert, damit es in deinen Tag passt</span>`);
-      for (const c of st.conflicts) badges.push(`<span class="badge warn">⚠️ Kollision: ${esc(c.label)} (${fmtTime(c.start)}–${fmtTime(c.end)})</span>`);
+      const badges = [st.active ? '<span class="badge info">👐 Arbeit</span>' : '<span class="badge info">💤 Ruhezeit</span>'];
+      if (st.extendedBy > 0) badges.push(`<span class="badge ok">↔ ${fmtDuration(st.extendedBy)} länger, damit es in deinen Tag passt</span>`);
+      for (const c of st.conflicts) badges.push(`<span class="badge warn">⚠️ ${esc(c.label)} ${fmtTime(c.start)}–${fmtTime(c.end)}</span>`);
       if (isNow) badges.push('<span class="badge ok">● läuft gerade</span>');
-      return `
-        <li class="${st.active ? '' : 'passive'} ${isDone ? 'done' : ''} ${isNow ? 'now' : ''}">
-          <div class="when">${fmtDay(st.start)} · ${fmtTime(st.start)}</div>
-          <div class="what">${idx + 1}. ${esc(st.name)}</div>
-          <div class="meta">Dauer ${fmtDuration(st.duration)} · bis ${fmtTime(st.end)}${st.note ? ' · ' + esc(st.note) : ''}</div>
-          <div>${badges.join('')}</div>
-        </li>`;
+      items.push(`
+        <li class="tl-item ${st.active ? '' : 'passive'} ${isDone ? 'done' : ''} ${isNow ? 'now' : ''}">
+          <div class="tl-time">${fmtTime(st.start)}</div>
+          <div class="tl-rail"><span class="tl-dot"></span></div>
+          <div class="tl-body">
+            <div class="tl-what">${idx + 1}. ${esc(st.name)}</div>
+            <div class="tl-meta">${fmtDuration(st.duration)} · bis ${fmtTime(st.end)} Uhr${fmtDay(st.end) !== fmtDay(st.start) ? ' (' + esc(fmtDay(st.end)) + ')' : ''}</div>
+            ${st.note ? `<div class="tl-note">${esc(st.note)}</div>` : ''}
+            <div class="badges">${badges.join('')}</div>
+          </div>
+        </li>`);
     });
+    dayHeader(state.eatAt);
     items.push(`
-      <li class="final">
-        <div class="when">${fmtDay(state.eatAt)} · ${fmtTime(state.eatAt)}</div>
-        <div class="what">🍕 Guten Appetit!</div>
+      <li class="tl-item final last">
+        <div class="tl-time">${fmtTime(state.eatAt)}</div>
+        <div class="tl-rail"><span class="tl-dot"></span></div>
+        <div class="tl-body"><div class="tl-what">🍕 Guten Appetit!</div></div>
       </li>`);
     $('#timeline').innerHTML = items.join('');
+    renderNextStep();
+    renderStats();
   }
 
   function setCount(n) {
-    n = Math.max(1, Math.min(200, Math.round(Number(n) || 1)));
-    state.count = n;
-    countEl.value = n;
+    state.count = Math.max(1, Math.min(200, Math.round(Number(n) || 1)));
+    countEl.value = state.count;
     renderIngredients();
     persist();
   }
@@ -619,8 +774,8 @@ function renderRecipe(recipe) {
   $('#minus').addEventListener('click', () => setCount(state.count - 1));
   $('#plus').addEventListener('click', () => setCount(state.count + 1));
   countEl.addEventListener('input', () => {
-    if (countEl.value === '') return;
-    state.count = Math.max(1, Math.min(200, Math.round(Number(countEl.value) || 1)));
+    if (countEl.value === '' || Number(countEl.value) < 1) return;
+    state.count = Math.min(200, Math.round(Number(countEl.value)));
     renderIngredients();
     persist();
   });
@@ -641,35 +796,36 @@ function renderRecipe(recipe) {
     });
   }
 
-  $('#eatAt').addEventListener('change', e => {
-    const d = new Date(e.target.value);
-    if (!isNaN(d)) {
-      state.eatAt = d;
-      persist();
-      renderPlan();
-    }
-  });
+  if (recipe.steps.length) {
+    $('#eatAt').addEventListener('change', e => {
+      const d = new Date(e.target.value);
+      if (!isNaN(d)) {
+        state.eatAt = d;
+        persist();
+        renderPlan();
+      }
+    });
 
-  $('#alarm').addEventListener('change', e => {
-    data.settings.alarmMinutes = Number(e.target.value);
-    save();
-  });
+    $('#alarm').addEventListener('change', e => {
+      data.settings.alarmMinutes = Number(e.target.value);
+      save();
+    });
 
-  $('#ics').addEventListener('click', () => {
-    const upcoming = currentPlan.filter(st => st.start > new Date());
-    if (!upcoming.length) return toast('Alle Schritte liegen in der Vergangenheit.');
-    const ics = buildIcs(recipe, upcoming, state.count, data.settings.alarmMinutes);
-    downloadFile(`pizza-${slug(recipe.name)}.ics`, ics, 'text/calendar;charset=utf-8');
-    toast('Kalenderdatei erstellt 📅');
-  });
+    $('#ics').addEventListener('click', () => {
+      const upcoming = currentPlan.filter(st => st.start > new Date());
+      if (!upcoming.length) return toast('Alle Schritte liegen in der Vergangenheit.');
+      const ics = buildIcs(recipe, upcoming, state.count, Number(data.settings.alarmMinutes) || 0);
+      downloadFile(`pizza-${slug(recipe.name)}.ics`, ics, 'text/calendar;charset=utf-8');
+      toast('Kalenderdatei erstellt 📅');
+    });
 
-  $('#reminders').addEventListener('click', () => {
-    const text = shortcutPayload(currentPlan, data.settings.alarmMinutes);
-    if (!text) return toast('Alle Schritte liegen in der Vergangenheit.');
-    const isApple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
-    if (!isApple) toast('Funktioniert nur auf iPhone, iPad oder Mac.');
-    location.href = shortcutUrl(text);
-  });
+    $('#reminders').addEventListener('click', () => {
+      const text = shortcutPayload(currentPlan, Number(data.settings.alarmMinutes) || 0);
+      if (!text) return toast('Alle Schritte liegen in der Vergangenheit.');
+      if (!/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)) return toast('Funktioniert nur auf iPhone, iPad oder Mac.');
+      location.href = shortcutUrl(text);
+    });
+  }
 
   $('#del').addEventListener('click', () => {
     if (!confirm(`Rezept „${recipe.name}“ wirklich löschen?`)) return;
@@ -691,6 +847,12 @@ function renderRecipe(recipe) {
 
   renderIngredients();
   renderPlan();
+
+  liveTimer = setInterval(() => {
+    // nicht neu zeichnen, während jemand gerade etwas eintippt
+    if (document.activeElement && ['INPUT', 'SELECT'].includes(document.activeElement.tagName)) return;
+    renderPlan();
+  }, 60000);
 }
 
 /* ---------------------------------------------------------------- Editor */
@@ -721,6 +883,7 @@ function renderEditor(recipe) {
     <h1>${isNew ? 'Neues Rezept' : 'Rezept bearbeiten'}</h1>
     <form id="form" novalidate>
       <section class="card">
+        <div class="card-head"><span class="card-icon" aria-hidden="true">📝</span><h2>Allgemein</h2></div>
         <div class="field">
           <label for="name">Name</label>
           <input id="name" required placeholder="z. B. Pizza Napoletana 48 h" value="${esc(r.name)}">
@@ -736,23 +899,23 @@ function renderEditor(recipe) {
       </section>
 
       <section class="card">
-        <h2>Zutaten</h2>
+        <div class="card-head"><span class="card-icon" aria-hidden="true">🧂</span><h2>Zutaten</h2></div>
         <p class="muted small">Mengen für die oben angegebene Anzahl Pizzen. Zutaten in g oder ml zählen zum Teiggewicht.</p>
         <div id="ings"></div>
         <button type="button" class="btn small" id="addIng">＋ Zutat</button>
       </section>
 
       <section class="card">
-        <h2>Arbeitsschritte</h2>
+        <div class="card-head"><span class="card-icon" aria-hidden="true">⏱</span><h2>Arbeitsschritte</h2></div>
         <p class="muted small">In Reihenfolge. <b>Arbeit</b> = du musst dabei sein. <b>Ruhezeit</b> = der Teig arbeitet allein.
           Bei Ruhezeiten kannst du eine <b>maximale Dauer</b> angeben – dann verschiebt der Zeitplan die Arbeitsschritte automatisch aus deinen Schul-/Arbeitszeiten heraus.</p>
         <div id="steps"></div>
         <button type="button" class="btn small" id="addStep">＋ Schritt</button>
       </section>
 
-      <div class="btn-row">
-        <button type="submit" class="btn primary">💾 Speichern</button>
+      <div class="sticky-save">
         <a class="btn" href="${isNew ? '#/' : '#/rezept/' + esc(r.id)}">Abbrechen</a>
+        <button type="submit" class="btn primary">💾 Speichern</button>
       </div>
     </form>
   `;
@@ -770,13 +933,14 @@ function renderEditor(recipe) {
       </div>`;
   }
 
-  function stepRow(s) {
+  function stepRow(s, idx) {
     const h = Math.floor((s.minutes || 0) / 60), m = (s.minutes || 0) % 60;
     const max = Math.max(s.maxMinutes || 0, s.minutes || 0);
     const mh = Math.floor(max / 60), mm = max % 60;
     return `
       <div class="edit-row step-row">
         <div class="line">
+          <span class="step-num" aria-hidden="true">${idx + 1}</span>
           <input class="st-name" placeholder="Schritt, z. B. Stockgare" value="${esc(s.name)}" aria-label="Schritt">
           <button type="button" class="btn icon danger remove" aria-label="Schritt entfernen">×</button>
         </div>
@@ -812,13 +976,14 @@ function renderEditor(recipe) {
     r.basePizzas = Math.max(1, Math.round(Number($('#base').value) || 1));
     r.ingredients = $$('#ings .ing-row').map(row => ({
       name: $('.ing-name', row).value.trim(),
-      amount: $('.ing-amount', row).value === '' ? '' : Number($('.ing-amount', row).value),
+      amount: $('.ing-amount', row).value === '' ? '' : Math.max(0, Number($('.ing-amount', row).value) || 0),
       unit: $('.ing-unit', row).value
     }));
     r.steps = $$('#steps .step-row').map(row => {
-      const minutes = (Number($('.st-h', row).value) || 0) * 60 + (Number($('.st-m', row).value) || 0);
+      const val = sel => Math.max(0, Number($(sel, row).value) || 0);
+      const minutes = Math.round(val('.st-h') * 60 + val('.st-m'));
       const active = $('.st-type', row).value === 'active';
-      const maxRaw = (Number($('.st-mh', row).value) || 0) * 60 + (Number($('.st-mm', row).value) || 0);
+      const maxRaw = Math.round(val('.st-mh') * 60 + val('.st-mm'));
       return {
         name: $('.st-name', row).value.trim(),
         minutes,
@@ -830,8 +995,8 @@ function renderEditor(recipe) {
   }
 
   function draw() {
-    $('#ings').innerHTML = r.ingredients.map(ingRow).join('');
-    $('#steps').innerHTML = r.steps.map(stepRow).join('');
+    $('#ings').innerHTML = r.ingredients.map(ingRow).join('') || '<p class="muted small">Noch keine Zutaten.</p>';
+    $('#steps').innerHTML = r.steps.map(stepRow).join('') || '<p class="muted small">Noch keine Schritte.</p>';
   }
 
   draw();
@@ -888,6 +1053,7 @@ function renderEditor(recipe) {
     r.ingredients.forEach(i => { i.amount = Number(i.amount) || 0; });
     r.steps = r.steps.filter(s => s.name || s.minutes);
     r.steps.forEach((s, i) => { if (!s.name) s.name = 'Schritt ' + (i + 1); });
+    if (!r.ingredients.length && !r.steps.length && !confirm('Das Rezept hat weder Zutaten noch Schritte. Trotzdem speichern?')) return;
 
     const idx = data.recipes.findIndex(x => x.id === r.id);
     if (idx >= 0) data.recipes[idx] = r;
@@ -900,6 +1066,15 @@ function renderEditor(recipe) {
 
 /* ---------------------------------------------------------------- Einstellungen */
 
+function busyIcon(label) {
+  const l = String(label).toLowerCase();
+  if (/schlaf|nacht/.test(l)) return '😴';
+  if (/schul|uni|vorlesung|kurs/.test(l)) return '🏫';
+  if (/arbeit|job|büro|schicht|dienst/.test(l)) return '💼';
+  if (/sport|training|verein/.test(l)) return '⚽️';
+  return '📌';
+}
+
 function renderSettings() {
   document.title = 'Einstellungen – Pizza-Rechner';
 
@@ -908,7 +1083,7 @@ function renderSettings() {
     <h1>Einstellungen</h1>
 
     <section class="card">
-      <h2>🏫 Meine belegten Zeiten</h2>
+      <div class="card-head"><span class="card-icon" aria-hidden="true">🏫</span><h2>Meine belegten Zeiten</h2></div>
       <p class="muted small">Schule, Arbeit, Training, Schlaf … In diesen Zeiten plant der Pizza-Rechner keine Arbeitsschritte ein
         und warnt dich, wenn es nicht anders geht.</p>
       <div id="busyList"></div>
@@ -920,9 +1095,9 @@ function renderSettings() {
           <input id="bLabel" placeholder="z. B. Schule, Arbeit" required>
         </div>
         <div class="field">
-          <label>Tage</label>
-          <div class="days">
-            ${WEEK_ORDER.map(d => `<label><input type="checkbox" value="${d}" ${d >= 1 && d <= 5 ? 'checked' : ''}> ${DAY_NAMES[d]}</label>`).join('')}
+          <label id="daysLabel">Tage</label>
+          <div class="days" role="group" aria-labelledby="daysLabel">
+            ${WEEK_ORDER.map(d => `<label><input type="checkbox" value="${d}" ${d >= 1 && d <= 5 ? 'checked' : ''}><span>${DAY_NAMES[d]}</span></label>`).join('')}
           </div>
         </div>
         <div class="row">
@@ -940,7 +1115,7 @@ function renderSettings() {
     </section>
 
     <section class="card">
-      <h2>⏰ Apple Erinnerungen einrichten</h2>
+      <div class="card-head"><span class="card-icon" aria-hidden="true">⏰</span><h2>Apple Erinnerungen einrichten</h2></div>
       <p class="small">Websites dürfen aus Sicherheitsgründen nicht direkt in die Erinnerungen-App schreiben.
         Mit einem kleinen <b>Kurzbefehl</b> (einmalig, ca. 2 Minuten) klappt es trotzdem:</p>
       <ol class="howto small">
@@ -959,7 +1134,7 @@ function renderSettings() {
     </section>
 
     <section class="card">
-      <h2>💾 Sicherung</h2>
+      <div class="card-head"><span class="card-icon" aria-hidden="true">💾</span><h2>Sicherung</h2></div>
       <p class="muted small">Deine Rezepte werden nur auf diesem Gerät im Browser gespeichert. Mit einer Sicherung kannst du sie auf ein anderes Gerät übertragen.</p>
       <div class="btn-row">
         <button class="btn" id="export">⬇️ Sicherung herunterladen</button>
@@ -969,10 +1144,11 @@ function renderSettings() {
       </div>
       <details>
         <summary>Alles zurücksetzen</summary>
-        <p class="small">Löscht alle Rezepte und Zeiten und stellt die Beispielrezepte wieder her.</p>
+        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten. Das eingebaute 48-Stunden-Rezept kommt danach wieder.</p>
         <button class="btn small danger" id="reset">Zurücksetzen</button>
       </details>
     </section>
+    <p class="footer">🍕 Pizza-Rechner · Alle Daten bleiben auf diesem Gerät.</p>
   `;
 
   function drawBusy() {
@@ -987,7 +1163,8 @@ function renderSettings() {
       const overnight = parseHM(b.to) <= parseHM(b.from) ? ' (über Nacht)' : '';
       return `
         <div class="busy-item">
-          <div>
+          <span class="ico" aria-hidden="true">${busyIcon(b.label)}</span>
+          <div class="grow">
             <div><b>${esc(b.label)}</b></div>
             <div class="muted small">${dayStr} · ${esc(b.from)}–${esc(b.to)}${overnight}</div>
           </div>
@@ -1038,7 +1215,7 @@ function renderSettings() {
       const parsed = JSON.parse(await file.text());
       if (!Array.isArray(parsed.recipes)) throw new Error('Keine Rezepte gefunden');
       if (!confirm(`Sicherung mit ${parsed.recipes.length} Rezept(en) laden? Die aktuellen Daten werden ersetzt.`)) return;
-      data = normalizeData(parsed);
+      data = normalizeData(Object.assign({}, parsed, { examplesRemoved: true }));
       save();
       toast('Sicherung geladen ✅');
       renderSettings();
@@ -1049,7 +1226,7 @@ function renderSettings() {
 
   $('#reset').addEventListener('click', () => {
     if (!confirm('Wirklich alle Daten löschen?')) return;
-    data = defaultData();
+    data = normalizeData(defaultData());
     save();
     toast('Zurückgesetzt');
     location.hash = '#/';
@@ -1058,6 +1235,8 @@ function renderSettings() {
 
 /* ---------------------------------------------------------------- Start */
 
+data = load();
+save();
 route();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
