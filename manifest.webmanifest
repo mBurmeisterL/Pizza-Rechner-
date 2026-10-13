@@ -1,0 +1,16 @@
+{
+  "name": "Pizza-Rechner",
+  "short_name": "Pizza",
+  "description": "Pizzateig-Rezepte umrechnen und mit Zeitplan planen.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf6f1",
+  "theme_color": "#c0392b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
