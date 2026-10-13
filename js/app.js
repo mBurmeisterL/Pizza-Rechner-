@@ -43,6 +43,27 @@ const BUILTIN_RECIPES = [
       { name: 'Teiglinge akklimatisieren', minutes: 120, active: false, maxMinutes: 180, note: 'Aus dem Kühlschrank nehmen und bei Raumtemperatur stehen lassen. Ofen rechtzeitig vorheizen.' },
       { name: 'Pizza machen', minutes: 30, active: true, maxMinutes: 30, note: 'Formen, belegen, backen. 🍕' }
     ]
+  },
+  {
+    id: 'builtin-65-kuehlschrank',
+    name: 'Pizzateig 65 % – Kühlschrank 12–16 h',
+    description: '1 kg Mehl 00, kaltes Wasser, 65 % Hydration. 6 Teiglinge à ca. 280 g, über Nacht im Kühlschrank.',
+    basePizzas: 6,
+    ingredients: [
+      { name: 'Mehl Tipo 00', amount: 1000, unit: 'g' },
+      { name: 'Wasser (kalt)', amount: 650, unit: 'g' },
+      { name: 'Trockenhefe', amount: 2.5, unit: 'g' },
+      { name: 'Salz', amount: 25, unit: 'g' }
+    ],
+    steps: [
+      { name: 'Teig kneten', minutes: 15, active: true, maxMinutes: 15, note: 'Mit kaltem Wasser kneten, bis der Teig glatt ist.' },
+      { name: 'Teig ruhen lassen', minutes: 15, active: false, maxMinutes: 15, note: '' },
+      { name: 'Teiglinge formen', minutes: 15, active: true, maxMinutes: 15, note: 'In 6 gleich große Bälle formen.' },
+      { name: 'Bei Raumtemperatur gehen lassen', minutes: 120, active: false, maxMinutes: 120, note: '' },
+      { name: 'Teiglinge in den Kühlschrank', minutes: 720, active: false, maxMinutes: 960, note: '12 bis 16 Stunden abgedeckt kalt stellen.' },
+      { name: 'Aus dem Kühlschrank nehmen', minutes: 240, active: false, maxMinutes: 360, note: '4 bis 6 Stunden vor dem Backen bei Raumtemperatur akklimatisieren lassen.' },
+      { name: 'Pizza machen', minutes: 30, active: true, maxMinutes: 30, note: 'Formen, belegen, backen. 🍕' }
+    ]
   }
 ];
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -1144,7 +1165,7 @@ function renderSettings() {
       </div>
       <details>
         <summary>Alles zurücksetzen</summary>
-        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten. Das eingebaute 48-Stunden-Rezept kommt danach wieder.</p>
+        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten. Die eingebauten Rezepte kommen danach wieder.</p>
         <button class="btn small danger" id="reset">Zurücksetzen</button>
       </details>
     </section>
