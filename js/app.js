@@ -13,6 +13,8 @@ const SHORTCUT_NAME = 'Pizza Erinnerungen';
 const FLEX_STEP_MIN = 15;     // Raster, in dem flexible Ruhezeiten verlängert werden
 const PRESENCE_MIN = 5;       // so lange musst du bei passiven Schritten "da sein" (z. B. Teig in den Kühlschrank)
 const MAX_PLAN_EVALS = 40000;  // Obergrenze für die Suche nach dem besten Zeitplan
+// Früher mitgelieferte Beispielrezepte, die aus bestehenden Daten einmalig entfernt werden
+const OLD_EXAMPLE_RECIPES = ['Neapolitanische Pizza (24 h kalte Gare)', 'Schnelle Pizza (am selben Tag)'];
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -24,49 +26,8 @@ function uid() {
 
 function defaultData() {
   return {
-    recipes: [
-      {
-        id: uid(),
-        name: 'Neapolitanische Pizza (24 h kalte Gare)',
-        description: 'Klassischer Teig mit wenig Hefe und langer Reifung im Kühlschrank. 65 % Hydration.',
-        basePizzas: 4,
-        ingredients: [
-          { name: 'Mehl Tipo 00', amount: 600, unit: 'g' },
-          { name: 'Wasser', amount: 390, unit: 'g' },
-          { name: 'Salz', amount: 18, unit: 'g' },
-          { name: 'Frischhefe', amount: 1, unit: 'g' }
-        ],
-        steps: [
-          { name: 'Teig kneten', minutes: 20, active: true, maxMinutes: 20, note: 'Hefe im Wasser auflösen, Mehl zugeben, Salz zum Schluss.' },
-          { name: 'Stockgare bei Raumtemperatur', minutes: 120, active: false, maxMinutes: 180, note: 'Abgedeckt ruhen lassen.' },
-          { name: 'Kalte Gare im Kühlschrank', minutes: 1440, active: false, maxMinutes: 2880, note: 'Teig luftdicht abdecken.' },
-          { name: 'Teiglinge formen', minutes: 15, active: true, maxMinutes: 15, note: 'Teig aus dem Kühlschrank, in gleich große Kugeln teilen.' },
-          { name: 'Stückgare', minutes: 180, active: false, maxMinutes: 300, note: 'Teiglinge abgedeckt bei Raumtemperatur gehen lassen.' },
-          { name: 'Ofen vorheizen', minutes: 60, active: false, maxMinutes: 60, note: 'Ofen auf maximale Temperatur, Pizzastein mit aufheizen.' },
-          { name: 'Pizzen formen, belegen & backen', minutes: 30, active: true, maxMinutes: 30, note: '' }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Schnelle Pizza (am selben Tag)',
-        description: 'Für spontane Pizzaabende – fertig in gut 2,5 Stunden.',
-        basePizzas: 2,
-        ingredients: [
-          { name: 'Mehl Type 550', amount: 300, unit: 'g' },
-          { name: 'Wasser (lauwarm)', amount: 195, unit: 'g' },
-          { name: 'Salz', amount: 7, unit: 'g' },
-          { name: 'Trockenhefe', amount: 3, unit: 'g' },
-          { name: 'Olivenöl', amount: 10, unit: 'g' }
-        ],
-        steps: [
-          { name: 'Teig kneten', minutes: 10, active: true, maxMinutes: 10, note: '' },
-          { name: 'Teig gehen lassen', minutes: 90, active: false, maxMinutes: 180, note: 'Warm und abgedeckt.' },
-          { name: 'Teiglinge formen', minutes: 10, active: true, maxMinutes: 10, note: '' },
-          { name: 'Stückgare & Ofen vorheizen', minutes: 45, active: false, maxMinutes: 60, note: 'Ofen gleich mit vorheizen.' },
-          { name: 'Pizzen belegen & backen', minutes: 20, active: true, maxMinutes: 20, note: '' }
-        ]
-      }
-    ],
+    examplesRemoved: true,
+    recipes: [],
     busy: [
       { id: uid(), label: 'Schlafen', days: [0, 1, 2, 3, 4, 5, 6], from: '23:00', to: '07:00' }
     ],
@@ -76,6 +37,7 @@ function defaultData() {
 }
 
 let data = load();
+save();
 
 function load() {
   try {
@@ -92,8 +54,11 @@ function load() {
 
 function normalizeData(d) {
   const base = defaultData();
+  let recipes = Array.isArray(d.recipes) ? d.recipes : base.recipes;
+  if (!d.examplesRemoved) recipes = recipes.filter(r => !OLD_EXAMPLE_RECIPES.includes(r.name));
   return {
-    recipes: Array.isArray(d.recipes) ? d.recipes : base.recipes,
+    examplesRemoved: true,
+    recipes,
     busy: Array.isArray(d.busy) ? d.busy : base.busy,
     settings: Object.assign({}, base.settings, d.settings || {}),
     view: d.view && typeof d.view === 'object' ? d.view : {}
@@ -969,7 +934,7 @@ function renderSettings() {
       </div>
       <details>
         <summary>Alles zurücksetzen</summary>
-        <p class="small">Löscht alle Rezepte und Zeiten und stellt die Beispielrezepte wieder her.</p>
+        <p class="small">Löscht alle Rezepte und eingetragenen Zeiten.</p>
         <button class="btn small danger" id="reset">Zurücksetzen</button>
       </details>
     </section>
