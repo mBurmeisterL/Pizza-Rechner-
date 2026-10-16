@@ -1,5 +1,5 @@
 // Einfacher Offline-Cache: erst Netzwerk, bei Fehler aus dem Cache.
-const CACHE = 'pizza-rechner-v3';
+const CACHE = 'pizza-rechner-v4';
 const ASSETS = [
   './',
   'index.html',
