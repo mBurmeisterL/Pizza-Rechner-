@@ -1,183 +1,150 @@
 ---
 name: apple-ui-designer
-description: Gestaltet Web-Oberflächen so, dass sie sich wie eine native iPhone-/iPad-App nach Apples Human Interface Guidelines anfühlen (iOS-Systemschrift, Dynamic-Type-Größen, Systemfarben hell/dunkel, gruppierte Listen, große Titel, Tab-Leiste, Sheets, Safe Areas, PWA-Details). Verwenden, wenn der Nutzer ein „Apple-Design“, „iOS-Look“, „wie eine iPhone-App“, „Apple UI“ oder „HIG“ möchte, oder wenn eine Web-App/PWA für iPhone gestaltet oder überarbeitet wird – auch wenn nur „schöner“ oder „wie Apple“ gesagt wird.
+description: Gestaltet Webseiten im Stil von Apples Webseiten (apple.com) – riesige, fette Headlines, viel Weißraum, Abschnitte abwechselnd weiß/hellgrau/schwarz, Produkt-Kacheln mit großen Bildern, blaue Pill-Buttons und „Mehr erfahren ›“-Links, große Kennzahlen, schlanke Navigationsleisten, Technische-Daten-Tabellen und sanfte Scroll-Animationen. Verwenden, wenn der Nutzer „wie die Apple-Webseite“, „apple.com-Stil“, „Apple-Design“, „wie Apple“ oder „Apple UI“ möchte oder eine Webseite edler, ruhiger und hochwertiger wirken soll – auch wenn nur „schöner“ gesagt wird und Apple vorher Thema war.
 ---
 
-# Apple UI Designer
+# Apple UI Designer – Stil von apple.com
 
-Ziel: Eine Web-App (HTML/CSS/JS, oft als PWA auf dem Home-Bildschirm) soll sich auf dem iPhone anfühlen
-wie eine App von Apple – ruhig, klar, viel Weißraum, Inhalte im Vordergrund. Nicht „Apple nachmachen“
-durch Logos oder Markenzeichen, sondern die Gestaltungsprinzipien übernehmen.
+Ziel: Eine Webseite soll sich anfühlen wie apple.com – reduziert, großzügig, selbstbewusst. Inhalte werden
+inszeniert wie Produkte: eine klare Aussage pro Abschnitt, große Typografie, viel Luft, wenige Farben.
+Nicht kopieren: kein Apple-Logo, keine Apple-Produktnamen oder -Bilder, keine Texte von apple.com.
+Übernommen werden nur die Gestaltungsprinzipien.
 
 ## Vorgehen
 
-1. **Bestand ansehen.** Vorhandenes CSS/HTML lesen, Screenshots in 390 × 844 (iPhone 14/15) hell und dunkel machen.
-   Notieren, was nicht iOS-typisch ist (bunte Verläufe überall, viele Schatten, eckige Buttons, kleine Tippflächen,
-   Inhalte ohne Gruppierung).
-2. **Design-Tokens zuerst.** Farben, Schriftgrößen, Abstände und Radien als CSS-Variablen auf `:root` definieren
-   (siehe unten), Dunkelmodus über `@media (prefers-color-scheme: dark)`. Erst danach Komponenten umbauen.
-3. **Komponenten umbauen** (Navigationsleiste, Listen, Buttons, Formulare, Tab-Leiste, Sheets) – Logik und Daten nicht anfassen,
-   außer es ist für die Bedienung nötig.
-4. **Prüfen.** Screenshots hell + dunkel, Tippflächen ≥ 44 px, kein horizontales Scrollen, Kontrast, Funktionen
-   per Playwright durchklicken. Ergebnis-Screenshots dem Nutzer zeigen.
+1. **Bestand ansehen.** HTML/CSS/JS lesen, Screenshots machen: 390 × 844 (iPhone) und 1280 × 800 (Desktop), hell und dunkel.
+2. **Inhalte als „Produktseite“ denken.** Was ist pro Seite die eine Hauptaussage (Hero)? Welche Kennzahlen lassen sich groß
+   zeigen? Was sind „Produkte“ (→ Kacheln)? Was sind Details (→ Technische-Daten-Tabelle)?
+3. **Design-Tokens** (unten) auf `:root` anlegen, dann Seiten Abschnitt für Abschnitt umbauen. Logik und Daten nicht anfassen.
+4. **Prüfen:** Screenshots Mobil + Desktop, hell + dunkel, kein horizontales Scrollen bei 320 px, Tippflächen ≥ 44 px,
+   alle Funktionen per Playwright durchklicken, keine Konsolenfehler. Vorher/Nachher-Screenshots zeigen.
 
-## Prinzipien (HIG)
-
-- **Klarheit:** Text gut lesbar, Symbole eindeutig, Funktion vor Dekoration.
-- **Zurückhaltung:** Die Oberfläche tritt hinter den Inhalt. Farbe sparsam – eine Akzentfarbe (Tint) für Interaktives.
-- **Tiefe:** Ebenen über Hintergrundfarben und durchscheinende Materialien, kaum harte Schatten.
-- **Konsistenz:** Gleiche Dinge sehen überall gleich aus und stehen an derselben Stelle.
-
-## Schrift
+## Typografie
 
 ```css
---font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
---font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; /* nur für Zahlen/Werte, sparsam */
+--font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+--font-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 ```
+(Auf Apple-Geräten wählt `-apple-system` automatisch die richtige SF-Variante; Schrift nicht von extern laden.)
 
-Dynamic-Type-Stufen (Standardgröße „Large“), in px:
+| Rolle | Desktop | Mobil | Gewicht | Laufweite |
+|---|---|---|---|---|
+| Hero-Headline | 80 / 84 px | 48 / 52 px | 600–700 | -0.015em |
+| Abschnitts-Headline | 56 / 60 px | 32–40 px | 600 | -0.005em |
+| Kachel-Headline | 40 px | 28 px | 600 | 0 |
+| Eyebrow (Kicker über Headline) | 21 px | 17 px | 600, oft farbig | 0 |
+| Subhead / Intro | 28 / 32 px | 21 / 25 px | 400–600 | 0.004em |
+| Fließtext | 17 / 25 px | 17 / 25 px | 400 | -0.022em |
+| Kleingedrucktes / Footer | 12 / 16 px | 12 px | 400 | -0.01em |
+| Große Kennzahl | 64–96 px | 48 px | 600, ggf. Verlauf | -0.02em |
 
-| Stil | Größe / Zeilenhöhe | Gewicht |
-|---|---|---|
-| Large Title | 34 / 41 | 700 |
-| Title 1 | 28 / 34 | 700 |
-| Title 2 | 22 / 28 | 700 |
-| Title 3 | 20 / 25 | 600 |
-| Headline | 17 / 22 | 600 |
-| Body | 17 / 22 | 400 |
-| Callout | 16 / 21 | 400 |
-| Subheadline | 15 / 20 | 400 |
-| Footnote | 13 / 18 | 400 |
-| Caption 1 | 12 / 16 | 400 |
+- Headlines kurz: zwei, drei Wörter, gern mit Punkt („Pizzateig. Perfekt geplant.“), Umbruch gezielt mit `<br>`.
+- Text zentriert in Heros und Feature-Abschnitten, linksbündig in Tabellen, Formularen und langen Texten.
+- Fluid: `font-size: clamp(48px, 7vw, 80px)`.
 
-- Body ist **17 px**, nicht 16. Eingabefelder mindestens 16 px, sonst zoomt Safari.
-- Zahlen: `font-variant-numeric: tabular-nums;`
-- Laufweite bei großen Titeln leicht negativ (`letter-spacing: -0.02em`), bei Body nicht verändern.
-- Optional echtes Dynamic Type: `font: -apple-system-body;` auf `html` und alles in `rem` – dann wächst die
-  App mit der Schriftgröße aus den iOS-Einstellungen.
-
-## Farben (iOS-Systemfarben)
+## Farben
 
 ```css
 :root {
-  --tint: #FF3B30;                 /* Akzentfarbe: systemRed, systemBlue #007AFF, systemOrange #FF9500 … */
-  --bg: #F2F2F7;                   /* systemGroupedBackground */
-  --bg-elevated: #FFFFFF;          /* secondarySystemGroupedBackground (Zellen, Karten) */
-  --bg-tertiary: #F2F2F7;          /* tertiarySystemGroupedBackground */
-  --fill: rgba(120,120,128,.12);   /* tertiarySystemFill: Segment-Hintergründe, Stepper */
-  --label: #000000;
-  --label-2: rgba(60,60,67,.60);   /* secondaryLabel */
-  --label-3: rgba(60,60,67,.30);   /* tertiaryLabel, Platzhalter */
-  --separator: rgba(60,60,67,.29);
-  --green: #34C759; --orange: #FF9500; --red: #FF3B30; --blue: #007AFF; --yellow: #FFCC00;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --tint: #FF453A;
-    --bg: #000000;
-    --bg-elevated: #1C1C1E;
-    --bg-tertiary: #2C2C2E;
-    --fill: rgba(118,118,128,.24);
-    --label: #FFFFFF;
-    --label-2: rgba(235,235,245,.60);
-    --label-3: rgba(235,235,245,.30);
-    --separator: rgba(84,84,88,.60);
-    --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --blue: #0A84FF; --yellow: #FFD60A;
-  }
+  --text: #1d1d1f;          /* fast schwarz – nie reines #000 für Text */
+  --text-2: #6e6e73;        /* sekundär */
+  --text-3: #86868b;        /* tertiär, Kleingedrucktes */
+  --bg: #ffffff;
+  --bg-alt: #f5f5f7;        /* hellgrau: Kacheln, abwechselnde Abschnitte, Footer */
+  --bg-dark: #000000;       /* dunkle „Bühnen“-Abschnitte */
+  --bg-dark-2: #161617;     /* Kacheln auf dunkel */
+  --text-on-dark: #f5f5f7;
+  --text-on-dark-2: #86868b;
+  --link: #0066cc;          /* Links auf hell */
+  --link-on-dark: #2997ff;  /* Links auf dunkel */
+  --btn: #0071e3;           /* Pill-Button */
+  --btn-hover: #0077ed;
+  --line: #d2d2d7;          /* Trennlinien, Rahmen */
+  --accent: …;              /* EINE Produktfarbe für Eyebrows/Verläufe, passend zum Inhalt */
 }
 ```
+- Dunkelmodus (`prefers-color-scheme: dark`): `--bg #000`, `--bg-alt #161617`, `--text #f5f5f7`, `--text-2 #a1a1a6`,
+  `--line #424245`, `--link #2997ff`. Dunkle Abschnitte bleiben dunkel (ggf. `#1d1d1f` als Unterschied).
+- Akzentfarbe sparsam: Eyebrow, eine Zahl mit Verlauf (`background: linear-gradient(...); -webkit-background-clip: text; color: transparent`), ein Icon.
+- Keine bunten Flächen, keine Schatten auf Text, Schatten auf Kacheln höchstens beim Hover sehr weich.
 
-- Interaktive Texte, Links, Symbole in Navigation und Tab-Leiste: `--tint`. Destruktives (Löschen): `--red`.
-- Status: Grün = ok, Orange = Warnung, Rot = Fehler – immer zusätzlich mit Text/Symbol, nie nur Farbe.
-- Keine großen Verläufe als Flächen; höchstens ein dezenter Akzent (z. B. App-Icon, ein Hero-Bild).
+## Layout
 
-## Abstände, Radien, Tippflächen
-
-- 8-px-Raster (4, 8, 12, 16, 20, 24, 32). Seitenränder **16 px** (iPhone), bei breiteren Fenstern 20 px.
-- Tippflächen **mindestens 44 × 44 px**.
-- Radien: gruppierte Liste/Karte 10–12 px, große Karten 16–20 px, Buttons „capsule“ (999 px) oder 12 px,
-  Eingabefelder 10 px. Ecken möglichst „continuous“ wirken lassen (lieber etwas größer als zu klein).
-- Safe Areas: `viewport-fit=cover` im Viewport-Meta und `env(safe-area-inset-*)` für oben (Notch/Dynamic Island),
-  unten (Home-Indikator) und seitlich (Querformat).
+- Abschnitte sind volle Breite und wechseln den Hintergrund (weiß → `#f5f5f7` → schwarz …). Innen max. 980 px Inhaltsbreite
+  (breite Kachelraster bis 1440 px), Seitenränder 22 px mobil.
+- Vertikaler Rhythmus groß: Abschnitte 80–120 px oben/unten (mobil 56–72 px). Lieber zu viel Luft als zu wenig.
+- Pro Abschnitt: Eyebrow → Headline → Subhead → 1–2 Aktionen → Bild/Inhalt.
 
 ## Komponenten
 
-**Navigationsleiste mit großem Titel**
-- Oben eine durchscheinende Leiste (`background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: saturate(180%) blur(20px);`),
-  Höhe 44 px + `env(safe-area-inset-top)`, Haarlinie unten (`0.5px solid var(--separator)`) erst beim Scrollen einblenden.
-- Darunter der **Large Title** (34 px, fett) linksbündig. Beim Scrollen kann der kleine Titel (17 px, 600, zentriert)
-  in der Leiste erscheinen (per `IntersectionObserver` auf den großen Titel).
-- Zurück-Button links: Chevron „‹“ + Titel der vorherigen Seite in `--tint`, Aktionen rechts als Text („Bearbeiten“, „Fertig“) oder Symbol.
+**Globale Navigationsleiste**
+- 44–48 px hoch, `background: rgba(250,250,252,.8)` + `backdrop-filter: saturate(180%) blur(20px)` (dunkel: `rgba(22,22,23,.8)`).
+- Links 12 px, `--text` mit 0.8 Deckkraft, gleichmäßig verteilt, mittig, max. 980 px. Logo/Marke links als kleines Symbol.
+- Mobil: nur Logo + 1–2 Symbole rechts (oder Menü-Symbol, das ein Vollbild-Menü mit 28 px-Links öffnet).
 
-**Gruppierte Listen (Inset Grouped) – das wichtigste Muster**
-- Abschnittstitel klein darüber (13 px, `--label-2`, Großbuchstaben optional), Fußnote darunter (13 px, `--label-2`).
-- Zellen auf `--bg-elevated`, gemeinsamer Radius 10–12 px, Zellen 44 px+ hoch, Innenabstand 16 px.
-- Trennlinien 0.5 px `--separator`, **eingerückt** ab dem Textanfang (nicht über die ganze Breite), letzte Zelle ohne Linie.
-- Zeile: links optional ein Symbol in einem farbigen 29 × 29-Quadrat (Radius 7), dann Titel, rechts Wert in `--label-2`
-  und Chevron `›` in `--label-3` für Navigation.
+**Lokale Navigationsleiste (pro Seite, sticky unter der globalen)**
+- 52 px, Titel der Seite links (21 px, 600), rechts kleine Text-Links (12 px) und ein kleiner Pill-Button (12 px, `--btn`).
+- Haarlinie unten (`1px solid rgba(0,0,0,.16)`), gleicher Blur wie oben.
 
-**Buttons**
-- Primär: gefüllt mit `--tint`, weiße Schrift 17 px/600, Höhe 50 px, volle Breite unten im Formular oder als Capsule.
-- Sekundär: getönt (`background: color-mix(in srgb, var(--tint) 15%, transparent); color: var(--tint)`).
-- Plain: nur Text in `--tint`. Destruktiv: Text oder Fläche in `--red`.
-- Gedrückt-Zustand: Deckkraft 0.6 oder leicht abdunkeln; `-webkit-tap-highlight-color: transparent`.
+**Hero**
+- Eyebrow (Akzentfarbe) – riesige Headline – Subhead (`--text-2` oder `--text`) – Buttons – großes Bild/Illustration.
+- Auf Mobil alles zentriert, Bild unten groß.
 
-**Formulare**
-- Eingaben als Zeilen in einer gruppierten Liste: Beschriftung links, Eingabe rechtsbündig ohne Rahmen – oder Feld mit
-  `--fill`-Hintergrund ohne Rahmen, Radius 10 px.
-- **Stepper** (− | +): zwei Segmente auf `--fill`, 94 × 32 px, Trennstrich in der Mitte.
-- **Schalter** (Switch): 51 × 31 px, an = `--green`. Als `<input type="checkbox" role="switch">` mit CSS.
-- **Segmented Control**: Container `--fill`, Radius 9 px, Höhe 32 px; aktives Segment `--bg-elevated` mit leichtem Schatten.
-- Datum/Uhrzeit: native `<input type="datetime-local">` / `type="time"` nutzen – iOS zeigt dann seine eigenen Räder/Kalender.
-- Auswahl: native `<select>` (iOS zeigt das Auswahlrad).
+**Buttons und Links**
+- Pill-Button: `background: var(--btn); color:#fff; border-radius: 980px; padding: 11px 21px; font-size: 17px; min-height: 44px`.
+- Sekundär-Pill: transparent, `1px solid var(--btn)`, Text `--btn`.
+- Text-Link mit Chevron: „Mehr erfahren ›“ in `--link`, 17–21 px, Unterstreichung nur beim Hover.
+- Kleine Pill (Navigationsleisten): 12 px, `padding: 4px 11px`, Höhe 28 px – auf Touch-Geräten Tippfläche per Pseudo-Element auf 44 px erweitern.
 
-**Tab-Leiste** (bei 2–5 Hauptbereichen)
-- Unten fixiert, durchscheinend mit Blur, Höhe 49 px + `env(safe-area-inset-bottom)`, Haarlinie oben.
-- Symbol (ca. 25 px) über Beschriftung (10 px, 500); aktiver Tab in `--tint`, inaktive in `--label-2`.
+**Kacheln (Tiles)**
+- `background: var(--bg-alt)` (oder schwarz), `border-radius: 18–28px`, `overflow: hidden`, Inhalt zentriert:
+  Headline 28–40 px, Subhead 17–21 px, Links, darunter großes Bild bis an den Rand.
+- Raster: 1 Spalte mobil, 2 ab ~734 px, Abstand 12–20 px. Hover: Bild minimal skalieren (`scale(1.02)`), keine Ränder.
 
-**Sheets & Dialoge**
-- Modal von unten: Radius oben 12–16 px, Griff (36 × 5 px, `--label-3`) oben, abgedunkelter Hintergrund.
-- Destruktive Bestätigungen als Action Sheet (Liste mit „Löschen“ in Rot + separatem „Abbrechen“) statt `confirm()`,
-  wenn es der Aufwand wert ist; `confirm()` ist auf iOS aber akzeptabel.
+**Große Kennzahlen („So viel ist drin“)**
+- Zahl riesig (48–96 px, 600), darunter kurze Erklärung 17 px `--text-2`. 3er-Reihe auf Desktop, gestapelt mobil.
 
-**Symbole**
-- SF Symbols sind auf Websites nicht als Font nutzbar. Stattdessen einfache, gleichmäßige Inline-SVG-Strichsymbole
-  (Strichstärke ~1.75–2, runde Enden, `currentColor`) oder sparsam Emoji. Nicht beides wild mischen.
+**Technische Daten / Vergleichstabelle**
+- Linksbündig, Zeilen mit `border-top: 1px solid var(--line)`, Label links (17 px, 600), Wert rechts oder darunter.
+- Großzügige Zeilenhöhe (Padding 16–24 px), keine Hintergründe, keine Zebra-Streifen.
 
-**Leere Zustände**
-- Zentriert: großes Symbol in `--label-3`, Title-3-Überschrift, ein Satz in `--label-2`, ein Button.
+**Formulare (wie Apple-Account/Checkout)**
+- Felder 56 px hoch, `border: 1px solid var(--line); border-radius: 12px`, Label schwebt im Feld (12 px oben, Placeholder 17 px).
+- Fokus: `border-color: var(--btn); box-shadow: 0 0 0 4px rgba(0,125,250,.6)` – deutlich sichtbar.
+- Auswahl als Pill-Optionen nebeneinander (aktiv: blauer 2-px-Rahmen), nicht als winzige Radio-Buttons.
+- Hauptaktion als großer blauer Pill-Button; mobil gern als fixierte Leiste unten.
+
+**Modal**
+- Zentriert (Desktop) bzw. von unten (mobil), `border-radius: 18px`, weiß auf abgedunkeltem Hintergrund
+  (`rgba(0,0,0,.48)` + Blur), runder Schließen-Knopf (×) oben rechts, 36 px, `background: #e8e8ed`.
+
+**Footer**
+- `background: var(--bg-alt)`, 12 px, `--text-2`, Spalten mit Links, Trennlinien `--line`, Kleingedrucktes ganz unten.
 
 ## Bewegung
 
-- Kurz und federnd: `transition: 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)`; für „Spring“-Gefühl
-  `cubic-bezier(0.34, 1.3, 0.64, 1)` sparsam.
-- Seitenwechsel optional als leichtes Hereinschieben von rechts (`translateX(24px)` → 0 mit Einblenden).
-- Immer `@media (prefers-reduced-motion: reduce)` beachten und Animationen dann abschalten.
+- Inhalte beim Scrollen sanft einblenden: `opacity 0 → 1`, `translateY(32px) → 0`, 0.8–1 s, `cubic-bezier(.28,.11,.32,1)`,
+  per `IntersectionObserver` (Klasse `.reveal.is-visible`). Nur einmal pro Element.
+- Hover auf Kacheln/Buttons 0.3 s. Keine hüpfenden oder blinkenden Effekte.
+- `@media (prefers-reduced-motion: reduce)`: alles sofort sichtbar, keine Bewegung.
+- Inhalte müssen auch ohne JavaScript bzw. ohne Observer sichtbar sein (Klasse erst per JS setzen).
 
-## PWA / iPhone-Details
+## Bilder und Symbole
 
-- `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`
-- `<meta name="apple-mobile-web-app-capable" content="yes">`, `apple-mobile-web-app-status-bar-style`
-  (`default` bei hellem Kopf, `black-translucent` wenn der Inhalt unter die Statusleiste laufen soll),
-  `apple-touch-icon` als 180 × 180 PNG ohne Transparenz.
-- `theme-color` getrennt für hell und dunkel (`media="(prefers-color-scheme: dark)"`).
-- `html { -webkit-text-size-adjust: 100%; } body { overscroll-behavior-y: none; }` nur wenn Pull-to-refresh stört.
-- Im Standalone-Modus (`@media (display-mode: standalone)`) fehlt Safaris Zurück-Button – eigene Zurück-Navigation ist Pflicht.
-- `user-select: none` nur für Bedienelemente, nie für Inhalte.
+- Große, freigestellte Illustrationen/Fotos sind der Star. Ohne echte Fotos: schlichte, große SVG-Illustrationen mit 2–3 Farben.
+- Symbole dünn und gleichmäßig (Strich 1.5–2), `currentColor`, eher groß (32–56 px) in Feature-Abschnitten.
 
 ## Barrierefreiheit
 
-- Kontrast mindestens 4.5:1 für Text (3:1 für großen Text/Symbole), auch im Dunkelmodus prüfen.
-- Echte `<button>`/`<a>`, `aria-label` für reine Symbol-Buttons, sichtbarer Fokus (`:focus-visible`).
-- Nichts nur über Farbe oder nur über Wischgesten erreichbar machen.
+- Kontrast ≥ 4.5:1 (auch `--text-2` auf `--bg-alt` prüfen), Links erkennbar, sichtbarer Fokus.
+- Echte Überschriften-Hierarchie (`h1` pro Seite, dann `h2`), `aria-label` für Symbol-Buttons, Tippflächen ≥ 44 px.
 
-## Prüfliste vor dem Abschluss
+## Prüfliste
 
-- [ ] Hell und dunkel per Screenshot (390 × 844) angesehen
-- [ ] Alle Tippflächen ≥ 44 px, kein horizontales Scrollen bei 320 px Breite
-- [ ] Body 17 px, Eingaben ≥ 16 px, Large Titles 34 px
-- [ ] Nur eine Akzentfarbe, Systemfarben für Status
-- [ ] Safe Areas oben/unten berücksichtigt (Notch, Home-Indikator)
-- [ ] Gruppierte Listen mit eingerückten 0.5-px-Trennlinien
-- [ ] Alle bisherigen Funktionen funktionieren noch (durchklicken), keine JS-Fehler in der Konsole
-- [ ] Dem Nutzer Vorher/Nachher-Screenshots gezeigt
+- [ ] Mobil (390 px) und Desktop (1280 px), hell und dunkel angesehen
+- [ ] Jede Seite hat einen klaren Hero mit kurzer, großer Headline
+- [ ] Abschnitte wechseln den Hintergrund, viel vertikaler Abstand
+- [ ] Nur eine Akzentfarbe, Links/Buttons im Apple-Blau
+- [ ] Kein horizontales Scrollen bei 320 px, Tippflächen ≥ 44 px
+- [ ] Scroll-Animationen respektieren `prefers-reduced-motion`, Inhalte ohne JS sichtbar
+- [ ] Alle Funktionen getestet, keine Konsolenfehler, Vorher/Nachher gezeigt
